@@ -14,12 +14,10 @@ export interface ChatStore {
   messagesByChatroom: Record<string, Message[]>
   isLoading: boolean
   isTyping: boolean
-  currentPage: number
   hasMoreMessages: boolean
   messagesPerPage: number
   autoScrollEnabled: boolean
   scrollPosition: Record<string, number> // Track scroll position per chatroom
-  totalPages: number // Fixed to 4 pages
   
   // Actions
   addMessage: (chatroomId: string, message: Omit<Message, 'id' | 'timestamp'>) => void
@@ -30,13 +28,9 @@ export interface ChatStore {
   addImageToMessage: (chatroomId: string, messageId: string, imageUrl: string) => void
   updateMessage: (chatroomId: string, messageId: string, updates: Partial<Message>) => void
   deleteMessage: (chatroomId: string, messageId: string) => void
-  getMessages: (chatroomId: string, page?: number) => Message[]
+  getMessages: (chatroomId: string) => Message[]
   setAutoScroll: (enabled: boolean) => void
   setScrollPosition: (chatroomId: string, position: number) => void
-  getPaginatedMessages: (chatroomId: string, page: number) => Message[]
-  getTotalPages: (chatroomId: string) => number
-  setCurrentPage: (page: number) => void
-  generateDummyMessages: (chatroomId: string) => void
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -45,12 +39,10 @@ export const useChatStore = create<ChatStore>()(
       messagesByChatroom: {},
       isLoading: false,
       isTyping: false,
-      currentPage: 1,
       hasMoreMessages: true,
       messagesPerPage: 20,
       autoScrollEnabled: true,
       scrollPosition: {},
-      totalPages: 4, // Fixed to 4 pages
 
       addMessage: (chatroomId, message) => {
         const newMessage = {
@@ -82,7 +74,6 @@ export const useChatStore = create<ChatStore>()(
             ...state.messagesByChatroom,
             [chatroomId]: []
           },
-          currentPage: 1, 
           hasMoreMessages: true,
           scrollPosition: {
             ...state.scrollPosition,
@@ -96,17 +87,15 @@ export const useChatStore = create<ChatStore>()(
 
         set((state) => ({
           isLoading: true,
-          currentPage: state.currentPage + 1,
         }))
 
         // Simulate loading older messages with more realistic data
         setTimeout(() => {
           const currentMessages = state.messagesByChatroom[chatroomId] || []
-          const page = state.currentPage
           
           // Generate more realistic dummy messages
           const dummyMessages: Message[] = Array.from({ length: 10 }, (_, i) => {
-            const messageIndex = (page - 1) * 10 + i
+            const messageIndex = i
             const isUser = messageIndex % 2 === 0
             const content = isUser 
               ? `User message ${messageIndex + 1} - This is a longer message to simulate real conversation content.`
@@ -129,42 +118,9 @@ export const useChatStore = create<ChatStore>()(
               ]
             },
             isLoading: false,
-            hasMoreMessages: page < 10, // Limit to 10 pages for demo
+            hasMoreMessages: true, // Always allow loading more
           }))
         }, 800) // Slightly faster loading
-      },
-
-      // Generate initial dummy messages for demonstration
-      generateDummyMessages: (chatroomId: string) => {
-        const state = get()
-        const currentMessages = state.messagesByChatroom[chatroomId] || []
-        
-        // Generate 40 dummy messages to ensure 4 pages (10 messages per page)
-        const dummyMessages: Message[] = Array.from({ length: 40 }, (_, i) => {
-          const isUser = i % 2 === 0
-          const content = isUser 
-            ? `Demo user message ${i + 1} - This is a sample message to demonstrate the 4-page pagination system.`
-            : `Demo AI response ${i + 1} - This is a sample AI response that shows how the pagination works across multiple pages.`
-          
-          return {
-            id: `demo-${Date.now()}-${i}`,
-            content,
-            role: isUser ? 'user' : 'assistant',
-            timestamp: new Date(Date.now() - (40 - i) * 60000), // 1 minute apart, newest first
-          }
-        })
-
-        set((state) => ({
-          messagesByChatroom: {
-            ...state.messagesByChatroom,
-            [chatroomId]: [
-              ...dummyMessages,
-              ...currentMessages
-            ]
-          },
-          currentPage: 1,
-          hasMoreMessages: false, // No more loading since we have 4 pages
-        }))
       },
 
       addImageToMessage: (chatroomId, messageId, imageUrl) =>
@@ -214,26 +170,6 @@ export const useChatStore = create<ChatStore>()(
             [chatroomId]: position
           }
         })),
-
-      getPaginatedMessages: (chatroomId, page) => {
-        const state = get()
-        const messages = state.messagesByChatroom[chatroomId] || []
-        const totalMessages = messages.length
-        
-        // Always divide into 4 pages
-        const messagesPerPage = Math.ceil(totalMessages / 4)
-        const startIndex = (page - 1) * messagesPerPage
-        const endIndex = startIndex + messagesPerPage
-        
-        return messages.slice(startIndex, endIndex)
-      },
-
-      getTotalPages: (chatroomId) => {
-        // Always return 4 pages
-        return 4
-      },
-
-      setCurrentPage: (page) => set({ currentPage: page }),
     }),
     {
       name: 'chat-storage',
