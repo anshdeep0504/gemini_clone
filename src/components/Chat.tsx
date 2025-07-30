@@ -11,7 +11,6 @@ import { useThemeStore } from '@/lib/theme-store'
 export function Chat(): React.JSX.Element {
   const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'valid' | 'invalid' | 'missing'>('checking')
   const [apiStatus, setApiStatus] = useState<APIStatus | null>(null)
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const { getActiveChatroom } = useChatroomStore()
   const { isDarkMode } = useThemeStore()
   const activeChatroom = getActiveChatroom()
@@ -29,14 +28,11 @@ export function Chat(): React.JSX.Element {
   }
 
   const checkAPIStatus = async () => {
-    setIsCheckingStatus(true)
     try {
       const status = await apiStatusChecker.checkAPIStatus()
       setApiStatus(status)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to check API status:', error)
-    } finally {
-      setIsCheckingStatus(false)
     }
   }
 
@@ -53,10 +49,6 @@ export function Chat(): React.JSX.Element {
       }
     }
   }, [])
-
-  const handleRetry = async () => {
-    await checkAPIStatus()
-  }
 
   return (
     <div className="flex flex-col h-full">

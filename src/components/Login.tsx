@@ -247,7 +247,7 @@ export function Login(): React.JSX.Element {
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-3">Verify OTP</h2>
                 <p className="text-gray-400 text-lg">
-                  We've sent a 6-digit code to {currentCountryCode} {currentPhone}
+                  We&apos;ve sent a 6-digit code to {currentCountryCode} {currentPhone}
                 </p>
               </div>
 

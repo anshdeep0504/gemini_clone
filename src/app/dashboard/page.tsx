@@ -10,7 +10,7 @@ import { useChatroomStore } from '@/lib/chatroom-store'
 import { useThemeStore } from '@/lib/theme-store'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { FiMenu, FiPlus, FiSettings, FiSearch, FiX } from 'react-icons/fi'
+import { FiMenu, FiSettings } from 'react-icons/fi'
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)

@@ -192,17 +192,17 @@ export function ChatForm() {
         toast.success('Response received! (Processed with delay)')
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating response:', error)
       
       let errorMessage = 'Failed to generate response'
-      if (error.message?.includes('quota') || error.message?.includes('429')) {
+      if ((error as any).message?.includes('quota') || (error as any).message?.includes('429')) {
         errorMessage = 'Still processing with delay...'
         toast.loading(errorMessage, { duration: 3000 })
-      } else if (error.message?.includes('overloaded')) {
+      } else if ((error as any).message?.includes('overloaded')) {
         errorMessage = 'Processing with delay due to high demand...'
         toast.loading(errorMessage, { duration: 3000 })
-      } else if (error.message?.includes('network')) {
+      } else if ((error as any).message?.includes('network')) {
         errorMessage = 'Network error - please check connection'
         toast.error(errorMessage)
       } else {

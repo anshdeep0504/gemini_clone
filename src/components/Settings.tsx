@@ -173,7 +173,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             <ol className={`text-xs space-y-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               <li>1. Go to <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Google AI Studio</a></li>
               <li>2. Sign in with your Google account</li>
-              <li>3. Click "Create API Key"</li>
+              <li>3. Click &quot;Create API Key&quot;</li>
               <li>4. Copy the generated key and paste it above</li>
             </ol>
           </div>

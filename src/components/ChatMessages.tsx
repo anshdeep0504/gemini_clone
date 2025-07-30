@@ -1,9 +1,9 @@
 'use client'
 
-import { useChatStore, type Message } from '@/lib/store'
+import { useChatStore } from '@/lib/store'
 import { useChatroomStore } from '@/lib/chatroom-store'
 import { useThemeStore } from '@/lib/theme-store'
-import { FiUser, FiMessageCircle, FiCopy, FiCheck, FiImage, FiTrash2, FiChevronUp, FiChevronDown, FiPause, FiPlay } from 'react-icons/fi'
+import { FiUser, FiMessageCircle, FiCopy, FiCheck, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
@@ -26,7 +26,6 @@ export function ChatMessages(): React.JSX.Element {
     getPaginatedMessages,
     getTotalPages,
     currentPage,
-    messagesPerPage,
     setCurrentPage,
     generateDummyMessages
   } = useChatStore()
@@ -41,7 +40,6 @@ export function ChatMessages(): React.JSX.Element {
   const totalPages = activeChatroom ? getTotalPages(activeChatroom.id) : 0
   
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [showScrollTop, setShowScrollTop] = useState(false)
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(true)
@@ -96,7 +94,6 @@ export function ChatMessages(): React.JSX.Element {
     setIsNearBottom(nearBottom)
     
     // Show/hide scroll buttons
-    setShowScrollTop(scrollTop > 200)
     setShowScrollBottom(scrollTop < scrollHeight - clientHeight - 200)
     
     // Disable auto-scroll if user scrolls up
@@ -150,7 +147,7 @@ export function ChatMessages(): React.JSX.Element {
       setCopiedId(messageId)
       toast.success('Message copied to clipboard!')
       setTimeout(() => setCopiedId(null), 2000)
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to copy text: ', err)
       toast.error('Failed to copy message')
     }
@@ -164,19 +161,12 @@ export function ChatMessages(): React.JSX.Element {
       try {
         deleteMessage(activeChatroom.id, messageId)
         toast.success('Message deleted!')
-      } catch (error) {
+      } catch (error: unknown) {
         toast.error('Failed to delete message')
       } finally {
         setDeletingMessage(null)
       }
     }
-  }
-
-  const scrollToTop = () => {
-    messagesContainerRef.current?.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    })
   }
 
   const handleScrollToBottom = () => {
@@ -185,13 +175,6 @@ export function ChatMessages(): React.JSX.Element {
     setCurrentPage(actualLastPage)
     scrollToBottomFn('smooth')
     setAutoScroll(true)
-  }
-
-  const toggleAutoScroll = () => {
-    setAutoScroll(!autoScrollEnabled)
-    if (!autoScrollEnabled) {
-      scrollToBottomFn('smooth')
-    }
   }
 
   const formatTimestamp = (date: Date): string => {
@@ -385,7 +368,7 @@ export function ChatMessages(): React.JSX.Element {
                             <div className={`prose max-w-none prose-sm lg:prose-base ${isDarkMode ? 'prose-invert' : ''}`}>
                               <ReactMarkdown
                                 components={{
-                                  code({ node, inline, className, children, ...props }: any) {
+                                  code({ inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
                                     return !inline && match ? (
                                       <div className="relative">
@@ -417,18 +400,18 @@ export function ChatMessages(): React.JSX.Element {
                                       </code>
                                     )
                                   },
-                                  p: ({ children }: any) => <p className="mb-2 lg:mb-3 last:mb-0 text-sm lg:text-base">{children}</p>,
-                                  ul: ({ children }: any) => <ul className="list-disc list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ul>,
-                                  ol: ({ children }: any) => <ol className="list-decimal list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ol>,
-                                  li: ({ children }: any) => <li className="text-sm lg:text-base">{children}</li>,
-                                  blockquote: ({ children }: any) => (
+                                  p: ({ children }) => <p className="mb-2 lg:mb-3 last:mb-0 text-sm lg:text-base">{children}</p>,
+                                  ul: ({ children }) => <ul className="list-disc list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ul>,
+                                  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ol>,
+                                  li: ({ children }) => <li className="text-sm lg:text-base">{children}</li>,
+                                  blockquote: ({ children }) => (
                                     <blockquote className={`border-l-4 pl-3 lg:pl-4 italic mb-2 lg:mb-3 text-sm lg:text-base ${isDarkMode ? 'border-gray-600 text-gray-300' : 'border-gray-400 text-gray-600'}`}>
                                       {children}
                                     </blockquote>
                                   ),
-                                  h1: ({ children }: any) => <h1 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">{children}</h1>,
-                                  h2: ({ children }: any) => <h2 className="text-base lg:text-lg font-bold mb-2">{children}</h2>,
-                                  h3: ({ children }: any) => <h3 className="text-sm lg:text-base font-bold mb-2">{children}</h3>,
+                                  h1: ({ children }) => <h1 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">{children}</h1>,
+                                  h2: ({ children }) => <h2 className="text-base lg:text-lg font-bold mb-2">{children}</h2>,
+                                  h3: ({ children }) => <h3 className="text-sm lg:text-base font-bold mb-2">{children}</h3>,
                                 }}
                               >
                                 {message.content}
