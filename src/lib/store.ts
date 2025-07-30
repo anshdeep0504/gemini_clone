@@ -53,7 +53,6 @@ export const useChatStore = create<ChatStore>()(
       totalPages: 4, // Fixed to 4 pages
 
       addMessage: (chatroomId, message) => {
-        const state = get()
         const newMessage = {
           ...message,
           id: crypto.randomUUID(),

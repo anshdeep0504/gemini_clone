@@ -112,73 +112,111 @@ function calculateThinkingDelay(prompt: string): number {
   return Math.min(baseDelay, 3000) // Cap at 3 seconds
 }
 
-export async function generateResponse(prompt: string): Promise<string> {
-  // Only run on client side
-  if (typeof window === 'undefined') {
-    throw new Error('API calls must be made from the client side')
-  }
-
-  // Check API key - try environment variable first, then localStorage
-  let API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-  
-  if (!API_KEY) {
-    // Try to get from localStorage as fallback
-    const localKey = localStorage.getItem('gemini_api_key')
-    API_KEY = localKey || undefined
-  }
-  
-  if (!API_KEY) {
-    throw new Error('NEXT_PUBLIC_GEMINI_API_KEY is not set in environment variables or localStorage')
-  }
-
+export async function generateResponse(
+  prompt: string,
+  images?: string[],
+  onChunk?: (chunk: string) => void,
+  onComplete?: (fullResponse: string) => void
+): Promise<string> {
   try {
-    console.log('🔑 Using Gemini API key:', API_KEY ? '✅ Set' : '❌ Not set')
+    // Check if API key is available
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || localStorage.getItem('gemini_api_key')
     
-    const genAI = new GoogleGenerativeAI(API_KEY)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    if (!apiKey) {
+      console.log('⚠️ No API key found, using mock response')
+      const mockResponse = `This is a mock response for: "${prompt}". To get real AI responses, please configure your Gemini API key in the settings.`
+      
+      // Simulate streaming
+      if (onChunk) {
+        const words = mockResponse.split(' ')
+        for (const word of words) {
+          onChunk(word + ' ')
+          await new Promise(resolve => setTimeout(resolve, 50))
+        }
+      }
+      
+      if (onComplete) {
+        onComplete(mockResponse)
+      }
+      
+      return mockResponse
+    }
+
+    // Use real Gemini API
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ 
+      model: process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-1.5-flash' 
+    })
+
+    // Prepare content parts
+    const contentParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = []
     
-    // Add minimum delay between API calls to prevent rate limiting
-    await new Promise(resolve => setTimeout(resolve, THROTTLE_CONFIG.MIN_API_DELAY))
+    // Add text prompt
+    contentParts.push({ text: prompt })
     
-    const result = await model.generateContent(prompt)
+    // Add images if provided
+    if (images && images.length > 0) {
+      for (const imageUrl of images) {
+        try {
+          const response = await fetch(imageUrl)
+          const arrayBuffer = await response.arrayBuffer()
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+          
+          // Determine MIME type from URL or default to jpeg
+          const mimeType = imageUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] === '.png' ? 'image/png' : 'image/jpeg'
+          
+          contentParts.push({
+            inlineData: {
+              mimeType,
+              data: base64
+            }
+          })
+        } catch (error: unknown) {
+          console.error('Failed to process image:', error)
+        }
+      }
+    }
+
+    // Generate content
+    const result = await model.generateContent(contentParts)
     const response = await result.response
-    return response.text()
-  } catch (error: any) {
+    const text = response.text()
+    
+    // Handle streaming if callback provided
+    if (onChunk) {
+      const words = text.split(' ')
+      for (const word of words) {
+        onChunk(word + ' ')
+        await new Promise(resolve => setTimeout(resolve, 30))
+      }
+    }
+    
+    if (onComplete) {
+      onComplete(text)
+    }
+    
+    return text
+    
+  } catch (error: unknown) {
     console.error('Error generating response:', error)
     
-    // Handle specific API key errors
-    if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key not valid')) {
-      throw new Error('Invalid API key. Please check your Gemini API key in .env.local or Settings')
+    // Handle specific error types
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key not valid')) {
+      throw new Error('Invalid API key. Please check your Gemini API key.')
     }
     
-    // Handle 503 overload error
-    if (error.message?.includes('503') || error.message?.includes('overloaded')) {
-      throw new Error('Gemini API is currently overloaded. Please try again in a few minutes.')
+    if (errorMessage.includes('quota') || errorMessage.includes('429')) {
+      throw new Error('API quota exceeded. Please try again later.')
     }
     
-    // Handle rate limiting
-    if (error.message?.includes('429') || error.message?.includes('rate limit')) {
-      throw new Error('Rate limit exceeded. Please wait a moment before trying again.')
+    if (errorMessage.includes('overloaded') || errorMessage.includes('503')) {
+      throw new Error('API is currently overloaded. Please try again later.')
     }
     
-    // Handle other API errors
-    if (error.message?.includes('400') || error.message?.includes('403')) {
-      throw new Error('API access denied. Please check your API key and permissions.')
-    }
-    
-    // Handle network errors
-    if (error.message?.includes('network') || error.message?.includes('fetch')) {
-      throw new Error('Network error. Please check your internet connection.')
-    }
-    
-    // For quota exceeded, don't throw error - let retry mechanism handle it
-    if (error.message?.includes('quota') || error.message?.includes('billing')) {
-      console.log('💰 API quota exceeded, will retry with delays...')
-      throw new Error('QUOTA_EXCEEDED_RETRY')
-    }
-    
-    // Generic error fallback
-    throw new Error('Failed to generate response. Please try again.')
+    throw new Error(`Failed to generate response: ${errorMessage}`)
   }
 }
 

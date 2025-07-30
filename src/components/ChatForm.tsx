@@ -196,13 +196,13 @@ export function ChatForm() {
       console.error('Error generating response:', error)
       
       let errorMessage = 'Failed to generate response'
-      if ((error as any).message?.includes('quota') || (error as any).message?.includes('429')) {
+      if ((error as Error).message?.includes('quota') || (error as Error).message?.includes('429')) {
         errorMessage = 'Still processing with delay...'
         toast.loading(errorMessage, { duration: 3000 })
-      } else if ((error as any).message?.includes('overloaded')) {
+      } else if ((error as Error).message?.includes('overloaded')) {
         errorMessage = 'Processing with delay due to high demand...'
         toast.loading(errorMessage, { duration: 3000 })
-      } else if ((error as any).message?.includes('network')) {
+      } else if ((error as Error).message?.includes('network')) {
         errorMessage = 'Network error - please check connection'
         toast.error(errorMessage)
       } else {

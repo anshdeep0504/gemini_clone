@@ -60,20 +60,22 @@ export async function fetchCountries(): Promise<Country[]> {
     }
     
     const formattedCountries: Country[] = data
-      .filter((country: any) => {
+      .filter((country: unknown) => {
         // Check if country has idd (International Direct Dialing) information
-        return country.idd && country.idd.root && country.idd.suffixes && country.idd.suffixes.length > 0
+        const countryData = country as { idd?: { root?: string; suffixes?: string[] } }
+        return countryData.idd && countryData.idd.root && countryData.idd.suffixes && countryData.idd.suffixes.length > 0
       })
-      .map((country: any) => {
+      .map((country: unknown) => {
         // Extract calling codes from idd field
         // idd.root already contains the "+" (like "+3") and idd.suffixes are like ["73"]
-        const callingCodes = country.idd.suffixes.map((suffix: string) => 
-          country.idd.root + suffix
+        const countryData = country as { name: { common: string }; flag: string; idd: { root: string; suffixes: string[] } }
+        const callingCodes = countryData.idd.suffixes.map((suffix: string) => 
+          countryData.idd.root + suffix
         )
         
         return {
-          name: country.name.common,
-          flag: country.flag,
+          name: countryData.name.common,
+          flag: countryData.flag,
           callingCodes: callingCodes
         }
       })

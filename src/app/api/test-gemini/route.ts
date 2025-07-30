@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateContent } from '@google/generative-ai'
 
 export async function POST(request: NextRequest) {
   try {
