@@ -3,18 +3,17 @@ export interface APIStatus {
   isOverloaded: boolean
   isQuotaExceeded: boolean
   lastChecked: Date
-  errorMessage?: string
 }
 
 class APIStatusChecker {
   private status: APIStatus = {
-    isAvailable: true,
+    isAvailable: false,
     isOverloaded: false,
     isQuotaExceeded: false,
     lastChecked: new Date()
   }
 
-  private checkTimeout: NodeJS.Timeout | null = null
+  private checkInterval: NodeJS.Timeout | null = null
 
   async checkAPIStatus(): Promise<APIStatus> {
     try {
@@ -23,7 +22,7 @@ class APIStatusChecker {
         isAvailable: true,
         isOverloaded: false,
         isQuotaExceeded: false,
-        lastChecked: new Date().toISOString()
+        lastChecked: new Date()
       }
       
       return mockStatus
@@ -33,31 +32,34 @@ class APIStatusChecker {
         isAvailable: false,
         isOverloaded: false,
         isQuotaExceeded: false,
-        lastChecked: new Date().toISOString()
+        lastChecked: new Date()
       }
     }
   }
 
-  getStatus(): APIStatus {
-    return this.status
-  }
-
-  // Schedule periodic status checks
-  startPeriodicCheck(intervalMs: number = 60000): void {
-    if (this.checkTimeout) {
-      clearTimeout(this.checkTimeout)
+  startPeriodicCheck(intervalMs: number = 30000) {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval)
     }
-
-    this.checkTimeout = setInterval(async () => {
-      await this.checkAPIStatus()
+    
+    this.checkInterval = setInterval(async () => {
+      try {
+        this.status = await this.checkAPIStatus()
+      } catch (error: unknown) {
+        console.error('Periodic API status check failed:', error)
+      }
     }, intervalMs)
   }
 
-  stopPeriodicCheck(): void {
-    if (this.checkTimeout) {
-      clearTimeout(this.checkTimeout)
-      this.checkTimeout = null
+  stopPeriodicCheck() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval)
+      this.checkInterval = null
     }
+  }
+
+  getCurrentStatus(): APIStatus {
+    return this.status
   }
 }
 
