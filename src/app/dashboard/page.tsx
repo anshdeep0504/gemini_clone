@@ -151,7 +151,11 @@ export default function Dashboard() {
               {activeChatroom ? (
                 <span>{activeChatroom.name}</span>
               ) : (
-                <span className="text-blue-400">Hello, {user?.phone ? `+${user.countryCode} ${user.phone}` : 'User'}! How can I help you today?</span>
+                <span className="text-blue-400">
+                  Hello, {user?.phone ? 
+                    `${user.countryCode ? '+' + user.countryCode : ''} ${user.phone}` : 
+                    'User'}! How can I help you today?
+                </span>
               )}
             </div>
           </div>
