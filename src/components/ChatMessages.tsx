@@ -368,7 +368,8 @@ export function ChatMessages(): React.JSX.Element {
                             <div className={`prose max-w-none prose-sm lg:prose-base ${isDarkMode ? 'prose-invert' : ''}`}>
                               <ReactMarkdown
                                 components={{
-                                  code({ inline, className, children, ...props }) {
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  code({ inline, className, children, ...props }: any) {
                                     const match = /language-(\w+)/.exec(className || '')
                                     return !inline && match ? (
                                       <div className="relative">
@@ -377,7 +378,6 @@ export function ChatMessages(): React.JSX.Element {
                                           language={match[1]}
                                           PreTag="div"
                                           className="rounded-lg text-xs lg:text-sm"
-                                          {...props}
                                         >
                                           {String(children).replace(/\n$/, '')}
                                         </SyntaxHighlighter>
@@ -400,18 +400,26 @@ export function ChatMessages(): React.JSX.Element {
                                       </code>
                                     )
                                   },
-                                  p: ({ children }) => <p className="mb-2 lg:mb-3 last:mb-0 text-sm lg:text-base">{children}</p>,
-                                  ul: ({ children }) => <ul className="list-disc list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ul>,
-                                  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ol>,
-                                  li: ({ children }) => <li className="text-sm lg:text-base">{children}</li>,
-                                  blockquote: ({ children }) => (
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  p: ({ children }: any) => <p className="mb-2 lg:mb-3 last:mb-0 text-sm lg:text-base">{children}</p>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  ul: ({ children }: any) => <ul className="list-disc list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ul>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  ol: ({ children }: any) => <ol className="list-decimal list-inside mb-2 lg:mb-3 space-y-1 text-sm lg:text-base">{children}</ol>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  li: ({ children }: any) => <li className="text-sm lg:text-base">{children}</li>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  blockquote: ({ children }: any) => (
                                     <blockquote className={`border-l-4 pl-3 lg:pl-4 italic mb-2 lg:mb-3 text-sm lg:text-base ${isDarkMode ? 'border-gray-600 text-gray-300' : 'border-gray-400 text-gray-600'}`}>
                                       {children}
                                     </blockquote>
                                   ),
-                                  h1: ({ children }) => <h1 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">{children}</h1>,
-                                  h2: ({ children }) => <h2 className="text-base lg:text-lg font-bold mb-2">{children}</h2>,
-                                  h3: ({ children }) => <h3 className="text-sm lg:text-base font-bold mb-2">{children}</h3>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  h1: ({ children }: any) => <h1 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">{children}</h1>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  h2: ({ children }: any) => <h2 className="text-base lg:text-lg font-bold mb-2">{children}</h2>,
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  h3: ({ children }: any) => <h3 className="text-sm lg:text-base font-bold mb-2">{children}</h3>,
                                 }}
                               >
                                 {message.content}

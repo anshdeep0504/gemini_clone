@@ -228,11 +228,11 @@ export async function generateResponseWithRetry(prompt: string, maxRetries: numb
   while (attempt <= maxQuotaRetries) {
     try {
       return await generateResponse(prompt)
-    } catch (error: any) {
-      console.log(`Attempt ${attempt}/${maxQuotaRetries} failed:`, error.message)
+    } catch (error: unknown) {
+      console.log(`Attempt ${attempt}/${maxQuotaRetries} failed:`, error instanceof Error ? error.message : 'Unknown error')
       
       // If it's a quota exceeded error, keep retrying with increasing delays
-      if (error.message === 'QUOTA_EXCEEDED_RETRY' || error.message?.includes('quota') || error.message?.includes('429')) {
+      if (error instanceof Error && (error.message === 'QUOTA_EXCEEDED_RETRY' || error.message?.includes('quota') || error.message?.includes('429'))) {
         const waitTime = Math.min(2000 * attempt, THROTTLE_CONFIG.MAX_QUOTA_DELAY) // Wait 2s, 4s, 6s... up to 30s max
         console.log(`💰 Quota exceeded, waiting ${waitTime}ms before retry ${attempt}/${maxQuotaRetries}...`)
         await new Promise(resolve => setTimeout(resolve, waitTime))
@@ -241,7 +241,7 @@ export async function generateResponseWithRetry(prompt: string, maxRetries: numb
       }
       
       // If it's a 503 overload error, wait before retrying
-      if (error.message?.includes('overloaded') || error.message?.includes('503')) {
+      if (error instanceof Error && (error.message?.includes('overloaded') || error.message?.includes('503'))) {
         if (attempt <= maxRetries) {
           const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000) // Exponential backoff, max 5s
           console.log(`Waiting ${waitTime}ms before retry...`)
